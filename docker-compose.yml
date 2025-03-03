@@ -1,0 +1,33 @@
+volumes:
+  mapdraw:
+
+services:
+  db-mapdraw:
+    image: mariadb
+    env_file: "./.secrets/db-mapdraw.env"
+    restart: always
+    volumes:
+      - ./data/db-mapdraw:/var/lib/mysql
+
+  mapdraw:
+    image: mapdraw
+    env_file: "./.secrets/mapdraw.env"
+    restart: always
+    links:
+      - db-mapdraw
+    volumes:
+      - mapdraw:/mapdraw/mapdraw
+      - ./config/mapdraw/conf:/config.json:ro
+
+  nginx:
+    image: nginx
+    restart: always
+    environment:
+      - LISTEN_IP4
+    links:
+      - mapdraw
+    ports:
+      - ${LISTEN_IP4}:8000:8000
+    volumes:
+      - mapdraw:/mapdraw/mapdraw
+      - ./config/nginx/conf:/etc/nginx/templates/default.conf.template:ro
